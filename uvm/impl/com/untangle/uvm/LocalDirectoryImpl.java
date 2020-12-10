@@ -10,10 +10,12 @@ import com.untangle.uvm.SettingsManager;
 import com.untangle.uvm.UvmContextFactory;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Base32;
 import org.apache.log4j.Logger;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,6 +30,9 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Local Directory stores a local list of users
@@ -184,6 +189,39 @@ public class LocalDirectoryImpl implements LocalDirectory
         }
 
         return false;
+    }
+
+    /**
+     * Authenticate a user
+     * 
+     * @param username
+     *        The username
+     * @param password
+     *        The password
+     * @param code
+     *        The TOTP code provided by the user
+     * @return True for successful authentication, otherwise false
+     */
+    public boolean authenticate(String username, String password, long code)
+    {
+        String secret = null;
+
+        // First check the basics.
+        if (authenticate(username, password) == false) return false;
+
+        Long offset = (long)UvmContextFactory.context().systemManager().getTimeZoneOffset() / 1000;
+
+        // Look up the users shared secret.
+        for (LocalDirectoryUser user : this.currentList) {
+            if (username.equals(user.getUsername())) {
+                secret = (Base64.decodeBase64(user.getTwofactorSecretBase64Hash().getBytes())).toString();
+                break;
+            }
+        }
+        // Is 2FA enabled for this user?
+        if (secret == null) return true; 
+        
+        return checkTOTPCode(secret, code, offset);
     }
 
     /**
@@ -938,6 +976,56 @@ public class LocalDirectoryImpl implements LocalDirectory
         }
 
         return (secbuff.toString());
+    }
+
+/**
+ * Check of TOTP code is correct.
+ *
+ * @param secret
+ *        Shared secret
+ * @param code
+ *        User provided code
+ * @param time
+ *        Current time.
+ *
+ * @return true if code is good, otherwise false.
+ */
+    private boolean checkTOTPCode(String secret, long code, long time)
+    {
+        Base32 codec = new Base32();
+        byte[] data = new byte[8];
+        long value = time;
+        byte[] decodedKey = codec.decode(secret);
+        byte[] hash;
+
+        for (int i = 8; i-- > 0; value >>>= 8) {
+            data[i] = (byte) value;
+        }
+        try {
+            SecretKeySpec signKey = new SecretKeySpec(decodedKey, "HmacSHA1");
+            Mac mac = Mac.getInstance("HmacSHA1");
+            mac.init(signKey);
+            hash = mac.doFinal(data);
+        } catch(Exception e) {
+            logger.warn("Not able to validate TOTP (ignoring) :", e);
+            return false;
+        }
+ 
+        int offset = hash[20 - 1] & 0xF;
+   
+        // We're using a long because Java hasn't got unsigned int.
+        long truncatedHash = 0;
+        for (int i = 0; i < 4; ++i) {
+            truncatedHash <<= 8;
+            // We are dealing with signed bytes:
+            // we just keep the first byte.
+            truncatedHash |= (hash[offset + i] & 0xFF);
+        }
+
+        truncatedHash &= 0x7FFFFFFF;
+        truncatedHash %= 1000000;
+
+        return (truncatedHash == code);
     }
 
     /**

@@ -23,6 +23,7 @@ public final class LocalDirectoryUser implements Serializable, Comparable<LocalD
     private String passwordShaHash;
     private String passwordMd5Hash;
     private String passwordBase64Hash;
+    private String twofactorSecretBase64Hash;
 
     private long expirationTime;
 
@@ -236,6 +237,26 @@ public final class LocalDirectoryUser implements Serializable, Comparable<LocalD
     {
         this.email = makeNotNull(email);
     }
+
+    /**
+     * Set the 2FA secret.
+     *
+     * @param twofa
+     *        Two factor secret.
+     */
+    public void setTwofactorSecretBase64Hash(String twofa)
+    {
+        this.twofactorSecretBase64Hash = twofa;
+    }
+
+    /**
+     * Get the 2FA secret.
+     *
+     * @return two factor secret.
+     */
+     public String getTwofactorSecretBase64Hash() {
+         return this.twofactorSecretBase64Hash;
+     }
 
     /**
      * Gets the account expiration time
