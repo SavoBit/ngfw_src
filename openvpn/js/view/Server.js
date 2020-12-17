@@ -91,6 +91,15 @@ Ext.define('Ung.apps.openvpn.view.Server', {
                 value: '{settings.authUserPass}',
                 disabled: '{settings.serverEnabled == false}'
             },
+        },            {
+            xtype: 'checkbox',
+            boxLabel: 'Require two factor (TOTP) authentication',
+            disabled: true,
+            bind: {
+                value: '{settings.twoFactorRequired}',
+                disabled: '{settings.authUserPass == false || settings.authenticationType !== "LOCAL_DIRECTORY"}',
+                hidden: '{settings.authUserPass == false}'
+            }
         },{
             xtype: 'container',
             layout: {

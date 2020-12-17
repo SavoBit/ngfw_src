@@ -23,7 +23,7 @@ public final class LocalDirectoryUser implements Serializable, Comparable<LocalD
     private String passwordShaHash;
     private String passwordMd5Hash;
     private String passwordBase64Hash;
-    private String twofactorSecretBase64Hash;
+    private String twofactorSecretKey;
 
     private long expirationTime;
 
@@ -244,9 +244,9 @@ public final class LocalDirectoryUser implements Serializable, Comparable<LocalD
      * @param twofa
      *        Two factor secret.
      */
-    public void setTwofactorSecretBase64Hash(String twofa)
+    public void setTwofactorSecretKey(String twofa)
     {
-        this.twofactorSecretBase64Hash = twofa;
+        this.twofactorSecretKey = twofa;
     }
 
     /**
@@ -254,8 +254,8 @@ public final class LocalDirectoryUser implements Serializable, Comparable<LocalD
      *
      * @return two factor secret.
      */
-     public String getTwofactorSecretBase64Hash() {
-         return this.twofactorSecretBase64Hash;
+     public String getTwofactorSecretKey() {
+         return this.twofactorSecretKey;
      }
 
     /**

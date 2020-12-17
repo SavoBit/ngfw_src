@@ -97,13 +97,23 @@ class Jars
                            Jars.downloadTarget('geoip2-2.6.0-with-dependencies/geoip2-2.6.0/lib/maxmind-db-1.2.0.jar'),
                            Jars.downloadTarget('geoip2-2.6.0-with-dependencies/geoip2-2.6.0/lib/geoip2-2.6.0.jar')])
 
+    const_set(:Zxing, [ Jars.downloadTarget('zxing-3.4.1/jcommander-1.78.jar'),
+                        Jars.downloadTarget('zxing-3.4.1/core-3.4.1.jar'),
+                        Jars.downloadTarget('zxing-3.4.1/javase-3.4.1.jar'),
+                        Jars.downloadTarget('zxing-3.4.1/jai-imageio-core-1.4.0.jar')])
+  
+    const_set(:JfreeSVG, [ Jars.downloadTarget('jfreesvg-3.3/jfreesvg-3.3.jar')])
+
+    const_set(:JaxbAPI, [ Jars.downloadTarget('jaxb-api-2.2.8/jaxb-api-2.2.8.jar')])
+
     ## Groups used for compiling
     # This is available to everything?
     const_set(:Base, Jars.makeGroup(CommonsText, Log4j, Postgres, JavaMailApi,
                                    GetText, JavaMail, TomcatEmb, Velocity, 
                                    HttpClient, Jstl, Json, Jabsorb,
                                    Slf4j, DnsJava, Selenium, GeoIP, SqlLite,
-                                   JakartaActivation, JavaTransaction))
+                                   JakartaActivation, JavaTransaction, Zxing,
+                                   JfreeSVG, JaxbAPI))
 
     const_set(:JDKTools, [ ThirdpartyJar.get("#{ENV['JAVA_HOME']}/lib/tools.jar") ])
   end

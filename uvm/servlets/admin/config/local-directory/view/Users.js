@@ -27,6 +27,7 @@ Ext.define('Ung.config.local-directory.view.Users', {
             email: '',
             password: '',
             passwordBase64Hash: '',
+            twofactorSecretKey: '',
             localExpires: Util.serverToClientDate(new Date()),
             localForever: true,
             localEmpty: true,
@@ -86,6 +87,17 @@ Ext.define('Ung.config.local-directory.view.Users', {
                 return result;
             },this)
         }, {
+            header: 'Two factor secret'.t(),
+            width: Renderer.messageWidth,
+            dataIndex: 'twofactorSecretKey',
+            renderer: Ext.bind(function(value, metadata, record) {
+                if (record.get("twofactorSecretKey") == null) return('');
+                if(Ext.isEmpty(value) && record.get("twofactorSecretKey").length > 0) return('*** ' + 'Unchanged'.t() + ' ***');
+                var result = "";
+                for(var i = 0 ; value != null && i < value.length ; i++) result = result + '*';
+                return result;
+            },this)
+        },{
             header: 'Expiration'.t(),
             dataIndex: 'expirationTime',
             width: Renderer.timestampWidth,
@@ -165,6 +177,48 @@ Ext.define('Ung.config.local-directory.view.Users', {
                 }
             }]
         }, {
+            xtype: 'container',
+            layout: 'column',
+            items: [{
+                xtype: 'textfield',
+                fieldLabel: 'Two factor secret'.t(),
+                labelAlign: 'right',
+                labelWidth: 180,
+                width: 500,
+                allowBlank: true,
+                emptyText: '[Two factor shared key]'.t(),
+                bind: {
+                    value: '{record.twofactorSecretKey}',
+                    hidden: '{!record.username}'
+                },
+            },{
+                xtype: 'button',
+                text: 'Generate new key',
+                bind: {
+                    hidden: '{!record.username}'
+                },
+                handler: function(btn) {
+                    Rpc.asyncData('rpc.UvmContext.localDirectory.generateSecret')
+                    .then(function(result){
+                        btn.lookupViewModel().get('record').set('twofactorSecretKey', result);
+                    });
+                }
+            },
+            {
+                xtype: 'button',
+                text: 'Show key/QR',
+                bind: {
+                    hidden: '{!record.twofactorSecretKey}'
+                },
+                handler: function(btn) {
+                    var record = btn.lookupViewModel().get('record');
+                    Rpc.asyncData('rpc.UvmContext.localDirectory.showSecretQR', record.get('username'), 'Untangle', record.get('twofactorSecretKey'))
+                    .then(function(result){
+                        Ext.MessageBox.alert({ buttons: Ext.Msg.OK, maxWidth: 1024, title: 'Provide user with key or QR image.'.t(), msg: result});
+                    });
+                }
+            }]
+        },{
             xtype: 'numberfield',
             fieldIndex: 'expirationTime',
             hidden: true,

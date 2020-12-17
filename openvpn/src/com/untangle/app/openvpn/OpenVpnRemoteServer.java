@@ -16,6 +16,7 @@ public class OpenVpnRemoteServer implements java.io.Serializable, org.json.JSONS
     private boolean enabled = true;
     private String name;
     private boolean authUserPass = false;
+    private boolean twoFactorRequired = false;
     private String authUsername;
     private String authPassword;
 
